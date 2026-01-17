@@ -1,4 +1,3 @@
-
 import { GoogleGenAI } from "@google/genai";
 import { ChatMessage, Language, HoroscopeData, PorondamData } from "../types";
 import { doc, getDoc } from "firebase/firestore";
@@ -6,13 +5,13 @@ import { db } from "../lib/firebase";
 
 /**
  * HADAHANA AI Service Layer
- * Adheres to Gemini 3 Series API guidelines. 
+ * Adheres to Gemini 1.5 Series API guidelines. 
  */
 
 // Helper function to get the AI client with dynamic API Key
 const getAIClient = async () => {
   // Vite සඳහා නිවැරදි ක්‍රමය
-  let apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  let apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.API_KEY;
 
   try {
     const docRef = doc(db, "settings", "global_config");
@@ -24,7 +23,7 @@ const getAIClient = async () => {
     console.warn("Fallback key logic used.");
   }
 
-  return new GoogleGenAI({ apiKey: apiKey || "" });
+  return new GoogleGenAI(apiKey || "");
 };
 
 // The definitive system instruction for HADAHANA AI (Digital Rishi Persona)
@@ -70,9 +69,10 @@ For any of the 40+ categories (Marriage, Wealth, Health, Omens, etc.):
 "මම හුදෙක් පරිගණක වැඩසටහනක් නොව, හෙළ බොදු අස්වැද්දුමෙන් පෝෂණය වූ ඩිජිටල් ගුරුන්නාන්සේ කෙනෙකි."
 `;
 
+const MODEL_NAME = "gemini-1.5-flash";
+
 /**
  * Advanced chat analysis handling text, multi-images, and history.
- * Uses gemini-3-flash-preview for high-speed astrological reasoning and vision capabilities.
  */
 export const analyzeHoroscopeAdvanced = async (
   images: string[],
@@ -80,11 +80,15 @@ export const analyzeHoroscopeAdvanced = async (
   history: ChatMessage[],
   outputLang: Language
 ): Promise<string> => {
-  const ai = await getAIClient();
+  const genAI = await getAIClient();
+  const model = genAI.getGenerativeModel({ 
+    model: MODEL_NAME,
+    systemInstruction: SYSTEM_INSTRUCTION 
+  });
 
-  // Prepare history for API
-  const contents = history.map(msg => ({
-    role: msg.role,
+  // Prepare history for chat format
+  const chatHistory = history.map(msg => ({
+    role: msg.role === 'user' ? 'user' : 'model',
     parts: [
       { text: msg.text },
       ...(msg.images || []).map(img => ({
@@ -96,12 +100,31 @@ export const analyzeHoroscopeAdvanced = async (
     ]
   }));
 
-  // Prepare current message parts
-  const currentParts: any[] = [];
-  
+  const chat = model.startChat({
+    history: chatHistory,
+    generationConfig: {
+      temperature: 0.5,
+      topP: 0.95,
+      topK: 40,
+    },
+  });
+
+  const langInstruction = outputLang === 'si' 
+    ? "භාෂාව: කරුණාකර 'පිරිසිදු සිංහල' භාෂාවෙන් (Formal Sinhala) පිළිතුරු දෙන්න." 
+    : "Language: Please respond in English, but maintain the highly respectful, spiritual, and professional 'Guru' tone.";
+
+  const now = new Date();
+  const dateString = now.toLocaleDateString('si-LK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const timeString = now.toLocaleTimeString('si-LK');
+  const systemContext = `[SYSTEM_DATA]: CURRENT_DATE = ${dateString}, CURRENT_TIME = ${timeString}`;
+
+  const currentMessageParts: any[] = [
+    { text: `${systemContext}\n\n${langInstruction}\n\nපරිශීලකයාගේ වත්මන් පණිවිඩය: ${userMessage}` }
+  ];
+
   if (images.length > 0) {
     images.forEach(img => {
-      currentParts.push({
+      currentMessageParts.push({
         inlineData: {
           mimeType: 'image/jpeg',
           data: img.split(',')[1],
@@ -109,80 +132,50 @@ export const analyzeHoroscopeAdvanced = async (
       });
     });
   }
-  
-  const langInstruction = outputLang === 'si' 
-    ? "භාෂාව: කරුණාකර 'පිරිසිදු සිංහල' භාෂාවෙන් (Formal Sinhala) පිළිතුරු දෙන්න." 
-    : "Language: Please respond in English, but maintain the highly respectful, spiritual, and professional 'Guru' tone.";
 
-  // Inject System Data for Real-time calculations
-  const now = new Date();
-  const dateString = now.toLocaleDateString('si-LK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  const timeString = now.toLocaleTimeString('si-LK');
-  const systemContext = `[SYSTEM_DATA]: CURRENT_DATE = ${dateString}, CURRENT_TIME = ${timeString}`;
+  const result = await chat.sendMessage(currentMessageParts);
+  const response = await result.response;
+  let cleanText = response.text();
 
-  currentParts.push({ 
-    text: `${systemContext}\n\n${langInstruction}\n\nපරිශීලකයාගේ වත්මන් පණිවිඩය: ${userMessage}` 
-  });
-
-  contents.push({
-    role: 'user',
-    parts: currentParts
-  });
-
-  const response = await ai.models.generateContent({
-    model: "gemini-1.5-flash",
-    contents: contents,
-    config: {
-      systemInstruction: SYSTEM_INSTRUCTION,
-      temperature: 0.5,
-      topP: 0.95,
-      topK: 40,
-    }
-  });
-
-  // Remove any potential markdown code blocks if the model accidentally includes them
-  let cleanText = response.text || "සන්නිවේදනයේ දෝෂයක් ඇති විය. කරුණාකර මඳ වේලාවකින් නැවත උත්සාහ කරන්න.";
-  cleanText = cleanText.replace(/```html/g, '').replace(/```/g, '');
-
-  return cleanText;
+  return cleanText.replace(/```html/g, '').replace(/```/g, '');
 };
 
 export const getHoroscopeReading = async (data: HoroscopeData, lang: Language): Promise<string> => {
-  const ai = await getAIClient();
+  const genAI = await getAIClient();
+  const model = genAI.getGenerativeModel({ model: MODEL_NAME, systemInstruction: SYSTEM_INSTRUCTION });
+  
   const langInstruction = lang === 'si' ? "Sinhala" : "English";
   const prompt = `Language: ${langInstruction}\n\nPerform a full horoscope reading based on:\nDOB: ${data.dob}\nTime: ${data.tob}\nPlace: ${data.pob}\n\nIMPORTANT: Respond in valid HTML using the specified classes.`;
-  const response = await ai.models.generateContent({ 
-    model: "gemini-1.5-flash",
-    contents: prompt,
-    config: { systemInstruction: SYSTEM_INSTRUCTION }
-  });
-  return (response.text || "Reading failed.").replace(/```html/g, '').replace(/```/g, '');
+  
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  return response.text().replace(/```html/g, '').replace(/```/g, '');
 };
 
 export const getPorondamReading = async (data: PorondamData, lang: Language): Promise<string> => {
-  const ai = await getAIClient();
+  const genAI = await getAIClient();
+  const model = genAI.getGenerativeModel({ model: MODEL_NAME, systemInstruction: SYSTEM_INSTRUCTION });
+  
   const langInstruction = lang === 'si' ? "Sinhala" : "English";
   const prompt = `Language: ${langInstruction}\n\nCheck Porondam compatibility for:\nGroom: ${data.groomName} (${data.groomNakshatra})\nBride: ${data.brideName} (${data.brideNakshatra})\n\nIMPORTANT: Respond in valid HTML using the specified classes.`;
-  const response = await ai.models.generateContent({ 
-    model: "gemini-1.5-flash",
-    contents: prompt,
-    config: { systemInstruction: SYSTEM_INSTRUCTION }
-  });
-  return (response.text || "Compatibility check failed.").replace(/```html/g, '').replace(/```/g, '');
+  
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  return response.text().replace(/```html/g, '').replace(/```/g, '');
 };
 
 export const analyzeAncientManuscript = async (image: string, lang: Language): Promise<string> => {
-  const ai = await getAIClient();
+  const genAI = await getAIClient();
+  const model = genAI.getGenerativeModel({ model: MODEL_NAME, systemInstruction: SYSTEM_INSTRUCTION });
+  
   const langInstruction = lang === 'si' ? "Sinhala" : "English";
-  const response = await ai.models.generateContent({
-   model: "gemini-1.5-flash",
-    contents: {
-      parts: [
-        { inlineData: { mimeType: 'image/jpeg', data: image.split(',')[1] } },
-        { text: `Language: ${langInstruction}\n\nAnalyze this manuscript.\nIMPORTANT: Respond in valid HTML using the specified classes.` }
-      ]
-    },
-    config: { systemInstruction: SYSTEM_INSTRUCTION }
-  });
-  return (response.text || "Manuscript analysis failed.").replace(/```html/g, '').replace(/```/g, '');
+  const prompt = `Language: ${langInstruction}\n\nAnalyze this manuscript.\nIMPORTANT: Respond in valid HTML using the specified classes.`;
+  
+  const result = await model.generateContent([
+    { inlineData: { mimeType: 'image/jpeg', data: image.split(',')[1] } },
+    { text: prompt }
+  ]);
+  
+  const response = await result.response;
+  return response.text().replace(/```html/g, '').replace(/```/g, '');
 };

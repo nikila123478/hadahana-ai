@@ -6,7 +6,7 @@ import { db } from "../lib/firebase";
 
 /**
  * HADAHANA AI Service Layer
- * Adheres to Gemini 3 Series API guidelines.
+ * Adheres to Gemini 3 Series API guidelines. 
  */
 
 // Helper function to get the AI client with dynamic API Key

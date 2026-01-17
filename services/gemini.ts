@@ -11,6 +11,7 @@ import { db } from "../lib/firebase";
 
 // Helper function to get the AI client with dynamic API Key
 const getAIClient = async () => {
+ let apiKey = process.env.API_KEY; // Default Fallback
  
 
   try {

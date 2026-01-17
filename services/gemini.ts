@@ -11,17 +11,17 @@ import { db } from "../lib/firebase";
 
 // Helper function to get the AI client with dynamic API Key
 const getAIClient = async () => {
-  // 1. මුලින්ම බලන්නේ Vercel එකේ තියෙන Key එක
-  let apiKey = process.env.VITE_GEMINI_API_KEY || process.env.API_KEY;
+  // Vite සඳහා නිවැරදි ක්‍රමය
+  let apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
   try {
     const docRef = doc(db, "settings", "global_config");
     const docSnap = await getDoc(docRef);
     if (docSnap.exists() && docSnap.data().geminiApiKey) {
-      apiKey = docSnap.data().geminiApiKey; // 2. Firebase එකේ තිබුණොත් ඒක ගන්නවා
+      apiKey = docSnap.data().geminiApiKey;
     }
   } catch (e) {
-    console.warn("Using environment fallback key.");
+    console.warn("Fallback key logic used.");
   }
 
   return new GoogleGenAI({ apiKey: apiKey || "" });

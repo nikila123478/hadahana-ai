@@ -11,22 +11,17 @@ import { db } from "../lib/firebase";
 
 // Helper function to get the AI client with dynamic API Key
 const getAIClient = async () => {
- let apiKey = process.env.API_KEY; // Default Fallback
- 
+  // 1. මුලින්ම බලන්නේ Vercel එකේ තියෙන Key එක
+  let apiKey = process.env.VITE_GEMINI_API_KEY || process.env.API_KEY;
 
   try {
     const docRef = doc(db, "settings", "global_config");
     const docSnap = await getDoc(docRef);
-
     if (docSnap.exists() && docSnap.data().geminiApiKey) {
-      apiKey = docSnap.data().geminiApiKey;
+      apiKey = docSnap.data().geminiApiKey; // 2. Firebase එකේ තිබුණොත් ඒක ගන්නවා
     }
-  } catch (error) {
-    console.warn("Failed to fetch API key from Firestore, using default env key.", error);
-  }
-
-  if (!apiKey) {
-    console.error("Critical: API Key not found in DB or Env.");
+  } catch (e) {
+    console.warn("Using environment fallback key.");
   }
 
   return new GoogleGenAI({ apiKey: apiKey || "" });

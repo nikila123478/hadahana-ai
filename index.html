@@ -1,0 +1,257 @@
+
+<!DOCTYPE html>
+<html lang="si">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HADAHANA AI - විශ්වීය කේන්දර පරීක්ෂාව</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Abhaya+Libre:wght@400;500;600;700;800&family=Cinzel:wght@400;700;900&family=Noto+Sans+Sinhala:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --cosmic-dark: #02020a;
+        --gold-primary: #d4af37;
+      }
+      body {
+        margin: 0;
+        background-color: var(--cosmic-dark);
+        font-family: 'Noto Sans Sinhala', sans-serif;
+        color: #f8fafc;
+        overflow-x: hidden;
+      }
+      
+      /* Typography */
+      .font-heading { 
+        font-family: 'Abhaya Libre', 'Cinzel', serif; 
+      }
+      
+      .gold-text-gradient {
+        background: linear-gradient(to bottom, #bf953f 0%, #fcf6ba 40%, #b38728 60%, #aa771c 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.3));
+      }
+
+      /* Silver Gradient for specific subtitles if needed */
+      .silver-text-gradient {
+        background: linear-gradient(to bottom, #e0e0e0 0%, #ffffff 50%, #a0a0a0 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      /* 3D Glass Cards */
+      .glass-panel {
+        background: rgba(10, 10, 20, 0.6);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      }
+      
+      .glass-card {
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+        backdrop-filter: blur(12px);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
+        border-right: 1px solid rgba(0, 0, 0, 0.2);
+        border-bottom: 4px solid rgba(0, 0, 0, 0.3); /* 3D Depth */
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        transform-style: preserve-3d;
+        position: relative;
+      }
+      
+      .glass-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        border-bottom: 4px solid rgba(212, 175, 55, 0.4);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(212, 175, 55, 0.1);
+      }
+      
+      .glass-card::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        border-radius: inherit;
+        box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.05);
+        pointer-events: none;
+      }
+
+      /* AI Response Formatting */
+      .response-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      }
+      
+      .gold-heading {
+        font-family: 'Abhaya Libre', serif;
+        font-weight: 700;
+        font-size: 1.25rem;
+        color: #e3bb76;
+        margin-bottom: 8px;
+        border-bottom: 1px solid rgba(227, 187, 118, 0.2);
+        padding-bottom: 4px;
+        display: inline-block;
+      }
+
+      .highlight-apala {
+        color: #fca5a5;
+        text-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+        font-weight: 600;
+      }
+
+      .highlight-subha {
+        color: #86efac;
+        text-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+        font-weight: 600;
+      }
+      
+      .response-list {
+        list-style-type: none;
+        padding-left: 0;
+      }
+      
+      .response-list li {
+        position: relative;
+        padding-left: 20px;
+        margin-bottom: 8px;
+        color: #e2e8f0;
+      }
+      
+      .response-list li::before {
+        content: '✦';
+        position: absolute;
+        left: 0;
+        color: #d4af37;
+        font-size: 10px;
+        top: 4px;
+      }
+
+      /* Guru Signature */
+      .guru-signature {
+        font-family: 'Noto Sans Sinhala', serif;
+        text-align: right;
+        margin-top: 24px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(212, 175, 55, 0.2);
+        color: #d4af37;
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+      }
+
+      /* Solar System 3D Animations */
+      .solar-system-container {
+        perspective: 1000px;
+        transform-style: preserve-3d;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      .solar-system-pivot {
+        transform: rotateX(60deg) translateY(-100px);
+        transform-style: preserve-3d;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .sun {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #fdb813 0%, #f27011 70%, #9e3a06 100%);
+        box-shadow: 0 0 60px #f27011, 0 0 100px rgba(242, 112, 17, 0.4);
+        position: absolute;
+        transform: rotateX(-60deg);
+        z-index: 10;
+        animation: sun-pulse 4s infinite alternate;
+      }
+      @keyframes sun-pulse {
+        0% { box-shadow: 0 0 60px #f27011, 0 0 100px rgba(242, 112, 17, 0.4); }
+        100% { box-shadow: 0 0 90px #f27011, 0 0 150px rgba(242, 112, 17, 0.6); }
+      }
+
+      .orbit {
+        position: absolute;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transform-style: preserve-3d;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .planet-container {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: 0;
+        height: 50%;
+        transform-origin: bottom center;
+        transform-style: preserve-3d;
+      }
+      .planet {
+        width: var(--size);
+        height: var(--size);
+        border-radius: 50%;
+        background: var(--color);
+        position: absolute;
+        top: calc(var(--size) * -0.5);
+        left: calc(var(--size) * -0.5);
+        transform: rotateX(-60deg);
+        box-shadow: inset -4px -4px 10px rgba(0,0,0,0.8), 0 0 10px var(--color);
+      }
+      
+      .orbit-mercury { width: 180px; height: 180px; animation: spin-orbit 8s linear infinite; }
+      .orbit-venus { width: 280px; height: 280px; animation: spin-orbit 12s linear infinite; }
+      .orbit-earth { width: 400px; height: 400px; animation: spin-orbit 20s linear infinite; }
+      .orbit-mars { width: 540px; height: 540px; animation: spin-orbit 32s linear infinite; }
+      .orbit-jupiter { width: 800px; height: 800px; animation: spin-orbit 50s linear infinite; }
+      .orbit-saturn { width: 1100px; height: 1100px; animation: spin-orbit 80s linear infinite; }
+
+      @keyframes spin-orbit {
+        from { transform: rotateZ(0deg); }
+        to { transform: rotateZ(360deg); }
+      }
+
+      .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.3); border-radius: 10px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, 0.6); }
+
+      .animate-float { animation: float 6s ease-in-out infinite; }
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+      }
+    </style>
+    <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "lottie-react": "https://esm.sh/lottie-react@^2.4.1",
+    "firebase/": "https://esm.sh/firebase@^12.8.0/"
+  }
+}
+</script>
+  <link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

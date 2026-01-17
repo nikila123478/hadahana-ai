@@ -1,0 +1,8 @@
+{
+  "name": "HADAHANA AI - Advanced Cosmic Astrology",
+  "description": "Premium AI-powered astrology platform using ancient palm leaf manuscript wisdom and advanced image analysis.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

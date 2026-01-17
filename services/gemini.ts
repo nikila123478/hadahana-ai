@@ -130,7 +130,7 @@ export const analyzeHoroscopeAdvanced = async (
   });
 
   const response = await ai.models.generateContent({
-    model: 'gemini-1.5-flash',
+    model: "models/gemini-1.5-flash",
     contents: contents,
     config: {
       systemInstruction: SYSTEM_INSTRUCTION,
@@ -152,7 +152,7 @@ export const getHoroscopeReading = async (data: HoroscopeData, lang: Language): 
   const langInstruction = lang === 'si' ? "Sinhala" : "English";
   const prompt = `Language: ${langInstruction}\n\nPerform a full horoscope reading based on:\nDOB: ${data.dob}\nTime: ${data.tob}\nPlace: ${data.pob}\n\nIMPORTANT: Respond in valid HTML using the specified classes.`;
   const response = await ai.models.generateContent({ 
-    model: 'gemini-1.5-flash', 
+    model: "models/gemini-1.5-flash",
     contents: prompt,
     config: { systemInstruction: SYSTEM_INSTRUCTION }
   });
@@ -164,7 +164,7 @@ export const getPorondamReading = async (data: PorondamData, lang: Language): Pr
   const langInstruction = lang === 'si' ? "Sinhala" : "English";
   const prompt = `Language: ${langInstruction}\n\nCheck Porondam compatibility for:\nGroom: ${data.groomName} (${data.groomNakshatra})\nBride: ${data.brideName} (${data.brideNakshatra})\n\nIMPORTANT: Respond in valid HTML using the specified classes.`;
   const response = await ai.models.generateContent({ 
-    model: 'gemini-1.5-flash', 
+    model: "models/gemini-1.5-flash",
     contents: prompt,
     config: { systemInstruction: SYSTEM_INSTRUCTION }
   });
@@ -175,7 +175,7 @@ export const analyzeAncientManuscript = async (image: string, lang: Language): P
   const ai = await getAIClient();
   const langInstruction = lang === 'si' ? "Sinhala" : "English";
   const response = await ai.models.generateContent({
-    model: 'gemini-1.5-flash',
+   model: "models/gemini-1.5-flash",
     contents: {
       parts: [
         { inlineData: { mimeType: 'image/jpeg', data: image.split(',')[1] } },
